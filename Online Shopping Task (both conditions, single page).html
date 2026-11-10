@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Online Shopping Task</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --ink:#1d2330; --muted:#667085; --line:#e3e6eb;
+          --accent:#2563eb; --ok:#15803d; --warn:#b45309; --bad:#b91c1c; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+         background:var(--bg); color:var(--ink); }
+  header { background:var(--card); border-bottom:1px solid var(--line); padding:14px 20px; }
+  header h1 { margin:0; font-size:1.2rem; }
+  header p { margin:4px 0 0; color:var(--muted); font-size:.9rem; }
+  main { display:grid; grid-template-columns: 1fr 340px; gap:20px; max-width:1100px;
+         margin:20px auto; padding:0 16px; }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; }
+  .tabs { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+  .tab { border:1px solid var(--line); background:var(--card); padding:7px 12px; border-radius:20px;
+         cursor:pointer; font-size:.9rem; }
+  .tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(190px,1fr)); gap:12px; }
+  .product { border:1px solid var(--line); border-radius:10px; padding:12px; display:flex;
+             flex-direction:column; gap:6px; background:#fff; }
+  .product .emoji { font-size:2rem; }
+  .product .name { font-weight:600; font-size:.95rem; }
+  .product .price { color:var(--muted); font-size:.9rem; }
+  .qty { display:flex; align-items:center; gap:8px; margin-top:auto; }
+  .qty button { width:32px; height:32px; border-radius:50%; border:1px solid var(--line);
+                background:#fff; font-size:1.1rem; cursor:pointer; }
+  .qty button:hover { background:#eef2ff; }
+  .qty span { min-width:20px; text-align:center; font-weight:600; }
+  .basket h2 { margin:0 0 10px; font-size:1.05rem; }
+  .basket ul { list-style:none; margin:0; padding:0; max-height:280px; overflow:auto; }
+  .basket li { display:flex; justify-content:space-between; padding:6px 0;
+               border-bottom:1px solid var(--line); font-size:.9rem; }
+  .total { font-size:1.6rem; font-weight:700; margin:12px 0 4px; }
+  .status { font-size:.9rem; padding:8px 10px; border-radius:8px; margin-bottom:10px; }
+  .status.ok   { background:#dcfce7; color:var(--ok); }
+  .status.warn { background:#fef3c7; color:var(--warn); }
+  .status.bad  { background:#fee2e2; color:var(--bad); }
+  label { display:block; font-size:.85rem; color:var(--muted); margin-bottom:4px; }
+  input[type=text] { width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:8px;
+                     font-size:1rem; margin-bottom:12px; }
+  .btn { width:100%; padding:11px; border:0; border-radius:8px; background:var(--accent);
+         color:#fff; font-size:1rem; cursor:pointer; }
+  .btn:disabled { background:#b6c2d9; cursor:not-allowed; }
+  .btn.secondary { background:#fff; color:var(--accent); border:1px solid var(--accent); margin-top:8px; }
+  .hidden { display:none; }
+  .notice { font-size:.85rem; color:var(--muted); margin-top:10px; }
+  .badge { display:inline-block; font-size:.7rem; padding:2px 6px; border-radius:4px;
+           background:#eef2ff; color:var(--accent); margin-left:6px; }
+  .step { font-size:.8rem; font-weight:600; color:var(--accent); margin-bottom:8px; }
+  .saved { font-size:.8rem; color:var(--muted); margin-top:8px; text-align:center; }
+  .saved.err { color:var(--bad); }
+  .banner { background:#eef2ff; border:1px solid #c7d2fe; color:#1e3a8a; padding:12px 14px; border-radius:10px; margin-bottom:12px; font-size:.95rem; font-weight:600; line-height:1.4; }
+  #instructions {
+    font-size: 1rem; font-weight: 600; line-height: 1.5; margin: 8px 0 16px; color: #1f2937;
+    background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px;
+  }
+  .study-intro {
+    margin-bottom: 16px; background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+    border: 1px solid #dfeaf8; border-radius: 12px; padding: 18px 20px;
+  }
+  .study-intro h2 {
+    margin: 0 0 10px; font-size: 1.15rem; color: #0f172a;
+  }
+  .study-intro p {
+    margin: 0 0 10px; line-height: 1.55; color: var(--muted);
+  }
+  .study-intro ul {
+    margin: 0; padding-left: 20px; color: #334155; line-height: 1.6;
+  }
+  .study-intro li strong { color: #0f172a; }
+  .tiny-note { font-size: .8rem; color: var(--muted); }
+  a.btn { display:block; text-align:center; text-decoration:none; margin-top:8px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Food Shopping Study</h1>
+  <p id="instructions"></p>
+</header>
+
+<main>
+  <section>
+    <div class="study-intro card">
+      <h2>What this task involves</h2>
+      <p>You will complete two short food shopping tasks. In each task, please choose the foods you would normally buy for 5 days.</p>
+      <ul>
+        <li><strong>Task 1:</strong> shop in Store A</li>
+        <li><strong>Task 2:</strong> shop in Store B</li>
+      </ul>
+      <p class="tiny-note">Please use your usual judgement and select foods you would realistically buy for yourself or your household.</p>
+    </div>
+    <div class="banner hidden" id="banner"></div>
+    <div class="tabs" id="tabs"></div>
+    <div class="grid" id="products"></div>
+  </section>
+
+  <aside class="card basket">
+    <div class="step" id="step"></div>
+    <h2>Your basket <span class="badge" id="condBadge"></span></h2>
+    <ul id="basketList"></ul>
+    <div class="total" id="total">£0.00</div>
+    <div class="status warn" id="status"></div>
+
+    <div id="pidBox">
+      <label for="pid">Your participant ID (copy this for the JISC survey)</label>
+      <input type="text" id="pid" placeholder="e.g. P017" autocomplete="off" style="font-size:1.05rem; font-weight:600; min-height:42px;">
+      <button type="button" class="btn secondary" id="copyPidBtn" style="margin-top:8px; width:100%;">Copy participant ID</button>
+    </div>
+
+    <button class="btn" id="submitBtn" disabled>Submit basket</button>
+
+    <div id="finishBox" class="hidden">
+      <button class="btn secondary" id="downloadBtn">Download my responses (CSV)</button>
+      <div style="font-size:0.9rem; margin:8px 0 10px; color:var(--muted);">Copy your participant ID before continuing to the questionnaire.</div>
+      <a class="btn" id="questionnaireLink" href="#">Continue to the questionnaire</a>
+    </div>
+    <div class="saved" id="saveInd"></div>
+  </aside>
+</main>
+
+<script>
+/* ============================================================
+   1. CONFIGURATION  (edit this section only)
+   ============================================================ */
+const CONFIG = {
+  budgetTarget: 13.00,
+  budgetTolerance: 8.00,
+  enforceBudget: true,
+
+  // Order of the two conditions. Override per participant with ?order=UR or ?order=RU
+  // (U = unrestricted/standard store, R = restricted store).
+  order: ["unrestricted", "restricted"],
+
+  // Local browser storage is always used. Leave blank to disable any external auto-save and use CSV export only.
+  saveUrl: "",
+
+  // Link to the JISC questionnaire and the pre-population parameter name used for the participant ID.
+  questionnaireUrl: "https://app.onlinesurveys.jisc.ac.uk/account/bathspa/survey/cmw982yhw000v02l4fssuhxej/build?page=5",
+  questionnaireParam: "participant_id"
+};
+
+// PLACEHOLDER products: replace with your real list.
+// nutri = Nutri-Score A-E.  restricted:true = NOT available in the restricted store.
+const PRODUCTS = [
+  { id:"f01", cat:"Fruit & veg", name:"Apple", price:0.35, nutri:0.35, emoji:"🍏" },
+  { id:"f02", cat:"Fruit & veg", name:"Banana", price:0.32, nutri:0.32, emoji:"🍌" },
+  { id:"f03", cat:"Fruit & veg", name:"Orange", price:0.3, nutri:0.3, emoji:"🍊" },
+  { id:"f04", cat:"Fruit & veg", name:"Pear", price:0.35, nutri:0.35, emoji:"🍐" },
+  { id:"f05", cat:"Fruit & veg", name:"Grapes (1 portion)", price:0.7, nutri:0.7, emoji:"🍇" },
+  { id:"f06", cat:"Fruit & veg", name:"Strawberries (1 portion)", price:0.8, nutri:0.8, emoji:"🍓" },
+  { id:"f07", cat:"Fruit & veg", name:"Blueberries (1 portion)", price:0.8, nutri:0.8, emoji:"🫐" },
+  { id:"f08", cat:"Fruit & veg", name:"Carrot", price:0.15, nutri:0.15, emoji:"🥕" },
+  { id:"f09", cat:"Fruit & veg", name:"Broccoli", price:0.8, nutri:0.8, emoji:"🥦" },
+  { id:"f10", cat:"Fruit & veg", name:"Avocado", price:0.95, nutri:0.95, emoji:"🥑" },
+  { id:"f11", cat:"Fruit & veg", name:"Cauliflower", price:1.2, nutri:1.2, emoji:"🥬" },
+  { id:"f12", cat:"Fruit & veg", name:"Peppers", price:0.8, nutri:0.8, emoji:"🫑" },
+  { id:"f13", cat:"Fruit & veg", name:"Garlic (1 clove)", price:0.05, nutri:0.05, emoji:"🧄" },
+  { id:"f14", cat:"Fruit & veg", name:"Courgette", price:0.6, nutri:0.6, emoji:"🥒" },
+  { id:"f15", cat:"Fruit & veg", name:"Tomatoes", price:1, nutri:1, emoji:"🍅" },
+  { id:"f16", cat:"Fruit & veg", name:"Cucumber", price:0.8, nutri:0.8, emoji:"🥒" },
+  { id:"f17", cat:"Fruit & veg", name:"Lettuce", price:0.8, nutri:0.8, emoji:"🥬" },
+  { id:"f18", cat:"Fruit & veg", name:"Spinach", price:1, nutri:1, emoji:"🌿" },
+  { id:"f19", cat:"Fruit & veg", name:"Sweetcorn (1 can)", price:0.5, nutri:0.5, emoji:"🌽" },
+  { id:"f20", cat:"Fruit & veg", name:"Mixed frozen vegetables", price:0.3, nutri:0.3, emoji:"🧊" },
+  { id:"f21", cat:"Fruit & veg", name:"Frozen peas (1 portion)", price:0.15, nutri:0.15, emoji:"🫛" },
+  { id:"f22", cat:"Fruit & veg", name:"Mixed salad (1 portion)", price:0.6, nutri:0.6, emoji:"🥗" },
+  { id:"f23", cat:"Fruit & veg", name:"Sweet potato", price:0.8, nutri:0.8, emoji:"🍠" },
+  { id:"f24", cat:"Fruit & veg", name:"Onions", price:0.25, nutri:0.25, emoji:"🧅" },
+  { id:"f25", cat:"Fruit & veg", name:"Mushrooms", price:1.2, nutri:1.2, emoji:"🍄" },
+
+  { id:"p01", cat:"Protein foods", name:"Chicken breast (1 portion)", price:1.44, nutri:1.44, emoji:"🍗" },
+  { id:"p02", cat:"Protein foods", name:"Chicken thigh fillets (1 pc)", price:1.36, nutri:1.36, emoji:"🍗" },
+  { id:"p03", cat:"Protein foods", name:"5% Lean mince (250g)", price:2.04, nutri:2.04, emoji:"🥩" },
+  { id:"p04", cat:"Protein foods", name:"20% Beef mince (250g)", price:1.3, nutri:1.3, emoji:"🥩" },
+  { id:"p05", cat:"Protein foods", name:"Bacon (1 rasher)", price:0.15, nutri:0.15, emoji:"🥓" },
+  { id:"p06", cat:"Protein foods", name:"Sausages (1)", price:0.25, nutri:0.25, emoji:"🌭" },
+  { id:"p07", cat:"Protein foods", name:"Quorn pieces (100g)", price:0.9, nutri:0.9, emoji:"🥬" },
+  { id:"p08", cat:"Protein foods", name:"Ham slices (1 portion)", price:0.5, nutri:0.5, emoji:"🍖" },
+  { id:"p09", cat:"Protein foods", name:"Pork chops (200g)", price:1.68, nutri:1.68, emoji:"🍖" },
+  { id:"p10", cat:"Protein foods", name:"Turkey mince (200g)", price:2.64, nutri:2.64, emoji:"🥩" },
+  { id:"p11", cat:"Protein foods", name:"Salmon (200g)", price:4.16, nutri:4.16, emoji:"🐟" },
+  { id:"p12", cat:"Protein foods", name:"Cod fillets (200g)", price:6, nutri:6, emoji:"🐟" },
+  { id:"p13", cat:"Protein foods", name:"Tinned tuna (1 can)", price:0.6, nutri:0.6, emoji:"🥫" },
+  { id:"p14", cat:"Protein foods", name:"Egg", price:0.3, nutri:0.3, emoji:"🥚" },
+  { id:"p15", cat:"Protein foods", name:"Greek yoghurt (150g)", price:0.36, nutri:0.36, emoji:"🥣" },
+  { id:"p16", cat:"Protein foods", name:"Protein yogurt (150g)", price:0.96, nutri:0.96, emoji:"🥣" },
+  { id:"p17", cat:"Protein foods", name:"Cottage cheese (125g)", price:0.75, nutri:0.75, emoji:"🧀" },
+  { id:"p18", cat:"Protein foods", name:"Cheddar cheese (125g)", price:0.9, nutri:0.9, emoji:"🧀" },
+  { id:"p19", cat:"Protein foods", name:"Milk (200ml)", price:0.16, nutri:0.16, emoji:"🥛" },
+  { id:"p20", cat:"Protein foods", name:"Oat milk (200ml)", price:0.3, nutri:0.3, emoji:"🥛" },
+  { id:"p21", cat:"Protein foods", name:"Baked beans (125g)", price:0.15, nutri:0.15, emoji:"🫘" },
+  { id:"p22", cat:"Protein foods", name:"Kidney beans (125g)", price:0.27, nutri:0.27, emoji:"🫘" },
+  { id:"p23", cat:"Protein foods", name:"Tinned lentils (125g)", price:0.32, nutri:0.32, emoji:"🫘" },
+  { id:"p24", cat:"Protein foods", name:"Tinned chickpeas (125g)", price:0.28, nutri:0.28, emoji:"🫘" },
+  { id:"p25", cat:"Protein foods", name:"Tofu (125g)", price:0.8, nutri:0.8, emoji:"🥬" },
+
+  { id:"c01", cat:"Carbohydrates", name:"White bread (1 slice)", price:0.03, nutri:0.03, emoji:"🍞" },
+  { id:"c02", cat:"Carbohydrates", name:"Multiseed bread (1 slice)", price:0.08, nutri:0.08, emoji:"🍞" },
+  { id:"c03", cat:"Carbohydrates", name:"Bagel", price:0.1, nutri:0.1, emoji:"🥯" },
+  { id:"c04", cat:"Carbohydrates", name:"Croissant", price:0.5, nutri:0.5, emoji:"🥐" },
+  { id:"c05", cat:"Carbohydrates", name:"Wrap", price:0.12, nutri:0.12, emoji:"🌯" },
+  { id:"c06", cat:"Carbohydrates", name:"White rice (1 portion)", price:0.18, nutri:0.18, emoji:"🍚" },
+  { id:"c07", cat:"Carbohydrates", name:"Brown rice (1 portion)", price:0.14, nutri:0.14, emoji:"🍚" },
+  { id:"c08", cat:"Carbohydrates", name:"Pasta (1 portion)", price:0.13, nutri:0.13, emoji:"🍝" },
+  { id:"c09", cat:"Carbohydrates", name:"Wholewheat pasta (1 pc)", price:0.15, nutri:0.15, emoji:"🍝" },
+  { id:"c10", cat:"Carbohydrates", name:"Oats (1 portion)", price:0.08, nutri:0.08, emoji:"🌾" },
+  { id:"c11", cat:"Carbohydrates", name:"Potato (medium)", price:0.18, nutri:0.18, emoji:"🥔" },
+  { id:"c12", cat:"Carbohydrates", name:"Couscous (1 portion)", price:0.16, nutri:0.16, emoji:"🍲" },
+  { id:"c13", cat:"Carbohydrates", name:"Egg noodles (1 portion)", price:0.38, nutri:0.38, emoji:"🍜" },
+  { id:"c14", cat:"Carbohydrates", name:"Corn flakes (1 portion)", price:0.12, nutri:0.12, emoji:"🥣" },
+  { id:"c15", cat:"Carbohydrates", name:"Granola (1 portion)", price:0.15, nutri:0.15, emoji:"🥣" },
+  { id:"c16", cat:"Carbohydrates", name:"Crumpet", price:0.1, nutri:0.1, emoji:"🥐" },
+  { id:"c17", cat:"Carbohydrates", name:"Pot noodle (1 pack)", price:1.3, nutri:1.3, emoji:"🍜" },
+
+  { id:"s01", cat:"Snacks", name:"Packet of crisps (1 bag)", price:0.18, nutri:0.18, emoji:"🥔" },
+  { id:"s02", cat:"Snacks", name:"Mini cheddars (1 bag)", price:0.25, nutri:0.25, emoji:"🧀" },
+  { id:"s03", cat:"Snacks", name:"Pringles (1 portion)", price:0.25, nutri:0.25, emoji:"🥔" },
+  { id:"s04", cat:"Snacks", name:"KitKat chocolate bar", price:0.27, nutri:0.27, emoji:"🍫" },
+  { id:"s05", cat:"Snacks", name:"Mars bar", price:0.35, nutri:0.35, emoji:"🍫" },
+  { id:"s06", cat:"Snacks", name:"Twix bar", price:0.35, nutri:0.35, emoji:"🍫" },
+  { id:"s07", cat:"Snacks", name:"Custard creams (2 biscuits)", price:0.08, nutri:0.08, emoji:"🍪" },
+  { id:"s08", cat:"Snacks", name:"Chocolate digestive (2)", price:0.13, nutri:0.13, emoji:"🍪" },
+  { id:"s09", cat:"Snacks", name:"Jaffa cakes (2)", price:0.1, nutri:0.1, emoji:"🍰" },
+  { id:"s10", cat:"Snacks", name:"Ice cream (1 portion)", price:0.06, nutri:0.06, emoji:"🍦" },
+  { id:"s11", cat:"Snacks", name:"Skittles (1 portion)", price:0.22, nutri:0.22, emoji:"🌈" },
+  { id:"s12", cat:"Snacks", name:"Wine gums (1 portion)", price:0.17, nutri:0.17, emoji:"🍬" },
+  { id:"s13", cat:"Snacks", name:"Jelly babies (1 portion)", price:0.19, nutri:0.19, emoji:"🍬" },
+  { id:"s14", cat:"Snacks", name:"Popcorn (1 portion)", price:0.17, nutri:0.17, emoji:"🍿" },
+  { id:"s15", cat:"Snacks", name:"KIND cereal bar", price:1, nutri:1, emoji:"🥣" },
+  { id:"s16", cat:"Snacks", name:"Protein bar", price:2.5, nutri:2.5, emoji:"🍫" },
+  { id:"s17", cat:"Snacks", name:"Roasted and salted nuts", price:0.43, nutri:0.43, emoji:"🥜" },
+  { id:"s18", cat:"Snacks", name:"Plain nuts", price:0.38, nutri:0.38, emoji:"🥜" },
+  { id:"s19", cat:"Snacks", name:"Mr Kipling slice", price:0.49, nutri:0.49, emoji:"🍰" },
+  { id:"s20", cat:"Snacks", name:"Muffins", price:0.5, nutri:0.5, emoji:"🧁" },
+  { id:"s21", cat:"Snacks", name:"Doughnuts", price:0.26, nutri:0.26, emoji:"🍩" },
+  { id:"s22", cat:"Snacks", name:"Flapjack ice", price:0.25, nutri:0.25, emoji:"🍦" },
+  { id:"s23", cat:"Snacks", name:"Cookie", price:0.3, nutri:0.3, emoji:"🍪" },
+  { id:"s24", cat:"Snacks", name:"Cadbury dairy milk pot", price:1.25, nutri:1.25, emoji:"🍫" },
+  { id:"s25", cat:"Snacks", name:"Rice cakes (3)", price:0.22, nutri:0.22, emoji:"🍘" },
+  { id:"s26", cat:"Snacks", name:"Sausage roll", price:0.65, nutri:0.65, emoji:"🥐" },
+  { id:"s27", cat:"Snacks", name:"Pork pie", price:0.9, nutri:0.9, emoji:"🥧" },
+  { id:"s28", cat:"Snacks", name:"Cheese string", price:0.3, nutri:0.3, emoji:"🧀" },
+  { id:"s29", cat:"Snacks", name:"Flipz pretzels", price:0.44, nutri:0.44, emoji:"🥨" },
+
+  { id:"m01", cat:"Frozen / ready meals", name:"Meat feast pizza", price:1.75, nutri:1.75, emoji:"🍕" },
+  { id:"m02", cat:"Frozen / ready meals", name:"Vegetable pizza", price:1.85, nutri:1.85, emoji:"🍕" },
+  { id:"m03", cat:"Frozen / ready meals", name:"Southern fried chicken (2)", price:1.5, nutri:1.5, emoji:"🍗" },
+  { id:"m04", cat:"Frozen / ready meals", name:"Lasagne ready meal", price:2, nutri:2, emoji:"🍝" },
+  { id:"m05", cat:"Frozen / ready meals", name:"Mac and cheese (1 portion)", price:1.75, nutri:1.75, emoji:"🍝" },
+  { id:"m06", cat:"Frozen / ready meals", name:"Frozen chips (1 portion)", price:0.3, nutri:0.3, emoji:"🍟" },
+  { id:"m07", cat:"Frozen / ready meals", name:"Onion rings (1 portion)", price:0.4, nutri:0.4, emoji:"🧅" },
+  { id:"m08", cat:"Frozen / ready meals", name:"Hash browns (1 portion)", price:0.3, nutri:0.3, emoji:"🥔" },
+  { id:"m09", cat:"Frozen / ready meals", name:"Garlic bread (1 portion)", price:0.5, nutri:0.5, emoji:"🥖" },
+  { id:"m10", cat:"Frozen / ready meals", name:"Chicken nuggets (3)", price:0.37, nutri:0.37, emoji:"🍗" },
+  { id:"m11", cat:"Frozen / ready meals", name:"Potato waffles (1 portion)", price:0.33, nutri:0.33, emoji:"🥔" },
+  { id:"m12", cat:"Frozen / ready meals", name:"Fish fingers (1 portion)", price:0.68, nutri:0.68, emoji:"🐟" },
+
+  { id:"d01", cat:"Drinks", name:"Water", price:0.75, nutri:0.75, emoji:"💧" },
+  { id:"d02", cat:"Drinks", name:"Coca Cola (1 can)", price:1.55, nutri:1.55, emoji:"🥤" },
+  { id:"d03", cat:"Drinks", name:"Diet Coca Cola (1 can)", price:1.5, nutri:1.5, emoji:"🥤" },
+  { id:"d04", cat:"Drinks", name:"Lemonade (1 can)", price:1, nutri:1, emoji:"🥤" },
+  { id:"d05", cat:"Drinks", name:"Red Bull (1 can)", price:2.15, nutri:2.15, emoji:"⚡" },
+  { id:"d06", cat:"Drinks", name:"Orange juice", price:0.18, nutri:0.18, emoji:"🍊" },
+  { id:"d07", cat:"Drinks", name:"Apple juice", price:0.15, nutri:0.15, emoji:"🍏" },
+  { id:"d08", cat:"Drinks", name:"Smoothie", price:0.25, nutri:0.25, emoji:"🥤" },
+  { id:"d09", cat:"Drinks", name:"Tea (1 serving)", price:0.05, nutri:0.05, emoji:"🍵" },
+  { id:"d10", cat:"Drinks", name:"Coffee (1 serving)", price:0.12, nutri:0.12, emoji:"☕" },
+  { id:"d11", cat:"Drinks", name:"Hot chocolate (1 serving)", price:0.2, nutri:0.2, emoji:"☕" },
+  { id:"d12", cat:"Drinks", name:"Milkshake (250ml)", price:1.25, nutri:1.25, emoji:"🥤" },
+  { id:"d13", cat:"Drinks", name:"Sports drink (500ml)", price:1.5, nutri:1.5, emoji:"💪" },
+  { id:"d14", cat:"Drinks", name:"Flavoured water (500ml)", price:1.2, nutri:1.2, emoji:"💧" },
+  { id:"d15", cat:"Drinks", name:"Squash (1 serving)", price:0.05, nutri:0.05, emoji:"🧃" },
+  { id:"d16", cat:"Drinks", name:"Fruit juice drink (250ml)", price:0.4, nutri:0.4, emoji:"🍋" },
+  { id:"d17", cat:"Drinks", name:"Kombucha (250ml)", price:1.75, nutri:1.75, emoji:"🥤" },
+  { id:"d18", cat:"Drinks", name:"Coconut water (250ml)", price:1.5, nutri:1.5, emoji:"🥥" },
+  { id:"d19", cat:"Drinks", name:"Protein shake (330ml)", price:2.5, nutri:2.5, emoji:"🥤" },
+  { id:"d20", cat:"Drinks", name:"Sparkling water (500ml)", price:0.75, nutri:0.75, emoji:"💧" }
+];
+
+/* ============================================================
+   2. HELPERS & STATE
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const money = n => "£" + n.toFixed(2);
+const NUTRI_POINTS = { A:1, B:2, C:3, D:4, E:5 };
+const scoreOf = p => Number.isFinite(p.nutri) ? Number(p.nutri) : (NUTRI_POINTS[p.nutri] ?? 0);
+const minBudget = +(CONFIG.budgetTarget - CONFIG.budgetTolerance).toFixed(2);
+const maxBudget = +(CONFIG.budgetTarget + CONFIG.budgetTolerance).toFixed(2);
+const secondBasketMin = 12.00;
+const secondBasketMax = 21.00;
+const inRange = t => t >= minBudget - 1e-9 && t <= maxBudget + 1e-9;
+const inRangeForStage = (t, stage = S.stage) => {
+  const {min, max} = stage === 1 ? { min: secondBasketMin, max: secondBasketMax } : { min: -Infinity, max: Infinity };
+  return t >= min - 1e-9 && t <= max + 1e-9;
+};
+const currentBudget = (stage = S.stage) => stage === 1 ? { min: secondBasketMin, max: secondBasketMax } : { min: 0, max: Infinity };
+const params = new URLSearchParams(location.search);
+const generateParticipantId = () => {
+  const key = "shoptask_pid_counter";
+  const next = (Number(localStorage.getItem(key) || "0") + 1);
+  localStorage.setItem(key, String(next));
+  return `P${String(next).padStart(3, "0")}`;
+};
+
+const ord = (params.get("order") || "").toUpperCase();
+const ORDER = ["unrestricted","restricted"];
+// The first basket is always unrestricted; the second basket starts from the first basket's selected items.
+
+// S.stage: 0 = first basket, 1 = second basket, 2 = finished
+let S = { pid:"", stage:0, baskets:{}, startedAt:{}, results:{} };
+let activeCat = null;
+
+const cond = () => ORDER[Math.min(S.stage, 1)];
+const available = c => PRODUCTS.filter(p => !(c === "restricted" && p.restricted));
+const basketOf = c => S.baskets[c] || (S.baskets[c] = {});
+const itemsOf = c => available(c).filter(p => (basketOf(c)[p.id]||0) > 0).map(p => ({...p, qty:basketOf(c)[p.id]}));
+const totalOf = c => itemsOf(c).reduce((s,p) => s + Math.round(p.price*100)*p.qty, 0) / 100;
+const countOf = c => itemsOf(c).reduce((s,p) => s + p.qty, 0);
+const meanNutri = c => countOf(c) ? itemsOf(c).reduce((s,p) => s + scoreOf(p)*p.qty, 0) / countOf(c) : "";
+
+const lsKey = pid => "shoptask_v3_" + pid;
+function persist() { if (S.pid) try { localStorage.setItem(lsKey(S.pid), JSON.stringify(S)); } catch(e) {} }
+
+/* ============================================================
+   3. LOCAL SAVE + CSV EXPORT
+   ============================================================ */
+function snapshot(c, status) {
+  const row = {
+    key: S.pid + "|" + c, pid: S.pid, condition: c,
+    conditionOrder: ORDER.indexOf(c) + 1, fullOrder: ORDER.join(">"), status,
+    basketTotal: totalOf(c).toFixed(2), inBudget: inRangeForStage(totalOf(c), S.stage) ? 1 : 0,
+    itemCount: countOf(c), distinctItems: itemsOf(c).length,
+    meanNutriPoints: meanNutri(c) === "" ? "" : meanNutri(c).toFixed(3),
+    secondsOnBasket: Math.round((Date.now() - (S.startedAt[c] || Date.now())) / 1000),
+    updatedAt: new Date().toISOString(),
+    itemsJson: JSON.stringify(itemsOf(c).map(p => ({id:p.id, qty:p.qty, nutri: scoreOf(p)}))),
+    selectedItemsWithNutri: JSON.stringify(itemsOf(c).map(p => ({id:p.id, qty:p.qty, nutri: scoreOf(p)})))
+  };
+  PRODUCTS.forEach(p => row["q_" + p.id] = basketOf(c)[p.id] || 0);
+  return row;
+}
+function indicator(t, err) { $("saveInd").textContent = t; $("saveInd").className = "saved" + (err ? " err" : ""); }
+async function sendToSheet(row) {
+  if (!CONFIG.saveUrl) return true;
+  try { await fetch(CONFIG.saveUrl, { method:"POST", mode:"no-cors", keepalive:true,
+          headers:{"Content-Type":"text/plain;charset=utf-8"}, body:JSON.stringify(row) }); return true; }
+  catch(e) { return false; }
+}
+let timer = null;
+function queueSave() {
+  persist();
+  if (!S.pid) { indicator("Enter your participant ID so your basket is saved"); return; }
+  indicator("Saving…");
+  clearTimeout(timer);
+  const c = cond();
+  timer = setTimeout(async () => {
+    const ok = await sendToSheet(snapshot(c, "in_progress"));
+    indicator(ok ? "All changes saved" : "Offline: kept on this device, will retry", !ok);
+    if (!ok) timer = setTimeout(() => queueSave(), 5000);
+  }, 700);
+}
+
+/* ============================================================
+   4. RENDERING
+   ============================================================ */
+function renderAll() {
+  const c = cond();
+  const budget = currentBudget();
+  $("condBadge").textContent = c === "restricted" ? "Store B" : "Store A";
+  $("step").textContent = S.stage >= 2 ? "Study complete" : `Task ${S.stage + 1} of 2`;
+  $("instructions").textContent =
+    S.stage === 0
+      ? `Task 1: choose the foods you would normally buy for 5 days in Store A. Spend between ${money(secondBasketMin)} and ${money(secondBasketMax)}.`
+      : S.stage === 1
+        ? `Task 2: choose the foods you would normally buy for 5 days in Store B. Spend between ${money(secondBasketMin)} and ${money(secondBasketMax)}.`
+        : "Thank you. You have completed both shopping tasks.";
+  const cats = [...new Set(available(c).map(p => p.cat))];
+  if (!cats.includes(activeCat)) activeCat = cats[0];
+  renderTabs(cats); renderProducts(); renderBasket();
+}
+function renderTabs(cats) {
+  $("tabs").innerHTML = "";
+  cats.forEach(cat => {
+    const b = document.createElement("button");
+    b.className = "tab" + (cat === activeCat ? " active" : "");
+    b.textContent = cat;
+    b.onclick = () => { activeCat = cat; renderTabs(cats); renderProducts(); };
+    $("tabs").appendChild(b);
+  });
+}
+function renderProducts() {
+  const c = cond(), grid = $("products"), locked = S.stage >= 2;
+  grid.innerHTML = "";
+  available(c).filter(p => p.cat === activeCat).forEach(p => {
+    const card = document.createElement("div");
+    card.className = "product";
+    card.innerHTML = `<div class="emoji">${p.emoji}</div><div class="name">${p.name}</div><div class="price">${money(p.price)}</div>
+      <div class="qty"><button aria-label="Remove one ${p.name}" ${locked?"disabled":""}>−</button><span id="q-${p.id}">${basketOf(c)[p.id]||0}</span><button aria-label="Add one ${p.name}" ${locked?"disabled":""}>+</button></div>`;
+    const [dec, inc] = card.querySelectorAll("button");
+    dec.onclick = () => change(p.id, -1);
+    inc.onclick = () => change(p.id, +1);
+    grid.appendChild(card);
+  });
+}
+function change(id, d) {
+  const c = cond(), b = basketOf(c);
+  S.startedAt[c] = S.startedAt[c] || Date.now();
+  b[id] = Math.max(0, (b[id]||0) + d);
+  $("q-" + id).textContent = b[id];
+  renderBasket(); queueSave();
+}
+function renderBasket() {
+  const c = cond(), its = itemsOf(c), total = totalOf(c);
+  const budget = currentBudget();
+  $("basketList").innerHTML = its.length
+    ? its.map(p => `<li><span>${p.qty} × ${p.name}</span><span>${money(p.price*p.qty)}</span></li>`).join("")
+    : `<li style="color:var(--muted)">Your basket is empty.</li>`;
+  $("total").textContent = money(total);
+  let msg, cls;
+  if (S.stage >= 2) { msg = "Both tasks are complete. Please continue to the questionnaire."; cls = "ok"; }
+  else if (!its.length) {
+    msg = S.stage === 1 ? `Choose the foods you would normally buy for 5 days. Aim for between ${money(budget.min)} and ${money(budget.max)}.` : "Add the foods you would normally buy for 5 days.";
+    cls = "warn";
+  }
+  else if (S.stage === 1 && CONFIG.enforceBudget && !inRangeForStage(total, S.stage)) {
+    if (total < budget.min) { msg = `You are ${money(budget.min-total)} below the minimum spend of ${money(budget.min)}.`; cls = "warn"; }
+    else { msg = `You are ${money(total-budget.max)} over the maximum spend of ${money(budget.max)}. Please remove something.`; cls = "bad"; }
+  }
+  else { msg = S.stage === 1 ? `Your total is within budget (${money(budget.min)} to ${money(budget.max)}). You can submit.` : "Your basket is ready to submit."; cls = "ok"; }
+  $("status").textContent = msg; $("status").className = "status " + cls;
+  $("submitBtn").textContent = S.stage === 0 ? "Submit basket 1 and continue" : "Submit basket 2";
+  $("submitBtn").classList.toggle("hidden", S.stage >= 2);
+  $("pidBox").classList.toggle("hidden", S.stage >= 2);
+  $("finishBox").classList.toggle("hidden", S.stage < 2);
+  $("pid").disabled = S.stage > 0;
+  $("submitBtn").disabled = S.stage >= 2 || !its.length || !$("pid").value.trim() || (S.stage === 1 && CONFIG.enforceBudget && !inRangeForStage(total, S.stage));
+}
+
+/* ============================================================
+   5. SUBMIT, RESUME, EXPORT
+   ============================================================ */
+async function submitBasket() {
+  clearTimeout(timer);
+  $("submitBtn").disabled = true;
+  const c = cond();
+  const row = snapshot(c, "final");
+  indicator("Saving…");
+  if (!(await sendToSheet(row))) { indicator("Could not save. Check your connection and try again.", true); renderBasket(); return; }
+  S.results[c] = row;
+  if (S.stage === 0) {
+    S.baskets.restricted = { ...(S.baskets.unrestricted || {}) };
+  }
+  S.stage += 1;
+  persist();
+  indicator("All changes saved");
+  if (S.stage === 1) {
+    $("banner").textContent = "Task 1 complete. Please continue to Task 2 in Store B.";
+    $("banner").classList.remove("hidden");
+    activeCat = null;
+  } else {
+    $("banner").textContent = "Both shopping tasks are complete. Please continue to the questionnaire.";
+    $("banner").classList.remove("hidden");
+    setupFinish();
+  }
+  renderAll(); window.scrollTo(0, 0);
+}
+function setupFinish() {
+  const base = CONFIG.questionnaireUrl, link = $("questionnaireLink");
+  if (base) link.href = base + (base.includes("?") ? "&" : "?") + encodeURIComponent(CONFIG.questionnaireParam) + "=" + encodeURIComponent(S.pid);
+  else link.classList.add("hidden");
+}
+function toCSV() {
+  const rows = ORDER.map(c => S.results[c] || snapshot(c, "final"));
+  const heads = Object.keys(rows[0]).filter(k => k !== "key");
+  const esc = v => `"${String(v ?? "").replace(/"/g, '""')}"`;
+  return [heads.join(","), ...rows.map(r => heads.map(h => esc(r[h])).join(","))].join("\n");
+}
+function downloadCSV() {
+  const csv = toCSV();
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], {type:"text/csv;charset=utf-8"}));
+  a.download = `${(S.pid || "participant")}_shopping_data.csv`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function init() {
+  const urlPid = params.get("pid");
+  if (urlPid) {
+    const saved = (() => { try { return JSON.parse(localStorage.getItem(lsKey(urlPid))); } catch(e) { return null; } })();
+    if (saved) S = saved;
+    S.pid = urlPid; $("pid").value = urlPid; $("pidBox").classList.add("hidden");
+  } else {
+    S.pid = generateParticipantId();
+    $("pid").value = S.pid;
+  }
+  if (S.stage === 1 && S.baskets.unrestricted && !S.baskets.restricted) {
+    S.baskets.restricted = { ...(S.baskets.unrestricted || {}) };
+  }
+  $("pid").addEventListener("input", () => {
+    const v = $("pid").value.trim();
+    if (v && v !== S.pid) {
+      let saved = null; try { saved = JSON.parse(localStorage.getItem(lsKey(v))); } catch(e) {}
+      if (saved) { S = saved; renderAll(); }
+      else S.pid = v;
+      if (S.stage === 2) setupFinish();
+    }
+    S.pid = v; renderBasket(); queueSave();
+  });
+  $("submitBtn").onclick = submitBasket;
+  $("downloadBtn").onclick = downloadCSV;
+  $("copyPidBtn").onclick = async () => {
+    try {
+      await navigator.clipboard.writeText($("pid").value || S.pid);
+      $("copyPidBtn").textContent = "Copied";
+      setTimeout(() => { $("copyPidBtn").textContent = "Copy participant ID"; }, 1200);
+    } catch (e) {
+      $("copyPidBtn").textContent = "Copy not supported";
+      setTimeout(() => { $("copyPidBtn").textContent = "Copy participant ID"; }, 1500);
+    }
+  };
+  if (S.stage >= 2) { setupFinish(); $("banner").textContent = "Both shopping tasks are complete. Please continue to the questionnaire."; $("banner").classList.remove("hidden"); }
+  else if (S.stage === 1) { $("banner").textContent = "Task 1 is complete. Please continue to Store B."; $("banner").classList.remove("hidden"); }
+  renderAll();
+}
+init();
+</script>
+</body>
+</html>
