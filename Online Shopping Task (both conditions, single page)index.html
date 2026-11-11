@@ -373,7 +373,7 @@ function renderAll() {
     S.stage === 0
       ? "Task 1: choose the foods you would normally buy for 5 days in Store A."
       : S.stage === 1
-        ? `Task 2: choose the foods you would normally buy for 5 days in Store B. Spend between ${budgetMoney(secondBasketMin)} and ${budgetMoney(secondBasketMax)}.`
+        ? "Task 2: choose the foods you would normally buy for 5 days in Store B. Spend between £19-£21."
         : "Thank you. You have completed both shopping tasks.";
   const cats = [...new Set(available(c).map(p => p.cat))];
   if (!cats.includes(activeCat)) activeCat = cats[0];
@@ -420,7 +420,7 @@ function renderBasket() {
   let msg, cls;
   if (S.stage >= 2) { msg = "Both tasks are complete. Please continue to the questionnaire."; cls = "ok"; }
   else if (!its.length) {
-    msg = S.stage === 1 ? `Choose the foods you would normally buy for 5 days. Spend between ${budgetMoney(budget.min)} and ${budgetMoney(budget.max)}.` : "Add the foods you would normally buy for 5 days.";
+    msg = S.stage === 1 ? "Choose the foods you would normally buy for 5 days. Spend between £19-£21." : "Add the foods you would normally buy for 5 days.";
     cls = "warn";
   }
   else if (S.stage === 1 && CONFIG.enforceBudget && !inRangeForStage(total, S.stage)) {
