@@ -139,10 +139,10 @@ const CONFIG = {
   order: ["unrestricted", "restricted"],
 
   // Local browser storage is always used. Leave blank to disable any external auto-save and use CSV export only.
-  saveUrl: "",
+  saveUrl: "https://script.google.com/macros/s/AKfycbyLJfs9NiMvkhnADzHygkJxq9m4tX-GLYqw34tlxt8A-9xeva53r-69-znEOaoy0EriOA/exec",
 
   // Link to the JISC questionnaire and the pre-population parameter name used for the participant ID.
-  questionnaireUrl: "https://app.onlinesurveys.jisc.ac.uk/account/bathspa/survey/cmw982yhw000v02l4fssuhxej/build?page=5",
+  questionnaireUrl: "https://app.onlinesurveys.jisc.ac.uk/s/bathspa/budget-restriction-and-dietary-choices-study",
   questionnaireParam: "participant_id"
 };
 
@@ -293,8 +293,9 @@ const NUTRI_POINTS = { A:1, B:2, C:3, D:4, E:5 };
 const scoreOf = p => Number.isFinite(p.nutri) ? Number(p.nutri) : (NUTRI_POINTS[p.nutri] ?? 0);
 const minBudget = +(CONFIG.budgetTarget - CONFIG.budgetTolerance).toFixed(2);
 const maxBudget = +(CONFIG.budgetTarget + CONFIG.budgetTolerance).toFixed(2);
-const secondBasketMin = 12.00;
+const secondBasketMin = 19.00;
 const secondBasketMax = 21.00;
+const budgetMoney = n => "£" + n.toFixed(0);
 const inRange = t => t >= minBudget - 1e-9 && t <= maxBudget + 1e-9;
 const inRangeForStage = (t, stage = S.stage) => {
   const {min, max} = stage === 1 ? { min: secondBasketMin, max: secondBasketMax } : { min: -Infinity, max: Infinity };
@@ -357,14 +358,7 @@ let timer = null;
 function queueSave() {
   persist();
   if (!S.pid) { indicator("Enter your participant ID so your basket is saved"); return; }
-  indicator("Saving…");
-  clearTimeout(timer);
-  const c = cond();
-  timer = setTimeout(async () => {
-    const ok = await sendToSheet(snapshot(c, "in_progress"));
-    indicator(ok ? "All changes saved" : "Offline: kept on this device, will retry", !ok);
-    if (!ok) timer = setTimeout(() => queueSave(), 5000);
-  }, 700);
+  indicator("Progress saved on this device");
 }
 
 /* ============================================================
@@ -377,9 +371,9 @@ function renderAll() {
   $("step").textContent = S.stage >= 2 ? "Study complete" : `Task ${S.stage + 1} of 2`;
   $("instructions").textContent =
     S.stage === 0
-      ? `Task 1: choose the foods you would normally buy for 5 days in Store A. Spend between ${money(secondBasketMin)} and ${money(secondBasketMax)}.`
+      ? "Task 1: choose the foods you would normally buy for 5 days in Store A."
       : S.stage === 1
-        ? `Task 2: choose the foods you would normally buy for 5 days in Store B. Spend between ${money(secondBasketMin)} and ${money(secondBasketMax)}.`
+        ? `Task 2: choose the foods you would normally buy for 5 days in Store B. Spend between ${budgetMoney(secondBasketMin)} and ${budgetMoney(secondBasketMax)}.`
         : "Thank you. You have completed both shopping tasks.";
   const cats = [...new Set(available(c).map(p => p.cat))];
   if (!cats.includes(activeCat)) activeCat = cats[0];
@@ -426,14 +420,14 @@ function renderBasket() {
   let msg, cls;
   if (S.stage >= 2) { msg = "Both tasks are complete. Please continue to the questionnaire."; cls = "ok"; }
   else if (!its.length) {
-    msg = S.stage === 1 ? `Choose the foods you would normally buy for 5 days. Aim for between ${money(budget.min)} and ${money(budget.max)}.` : "Add the foods you would normally buy for 5 days.";
+    msg = S.stage === 1 ? `Choose the foods you would normally buy for 5 days. Spend between ${budgetMoney(budget.min)} and ${budgetMoney(budget.max)}.` : "Add the foods you would normally buy for 5 days.";
     cls = "warn";
   }
   else if (S.stage === 1 && CONFIG.enforceBudget && !inRangeForStage(total, S.stage)) {
-    if (total < budget.min) { msg = `You are ${money(budget.min-total)} below the minimum spend of ${money(budget.min)}.`; cls = "warn"; }
-    else { msg = `You are ${money(total-budget.max)} over the maximum spend of ${money(budget.max)}. Please remove something.`; cls = "bad"; }
+    if (total < budget.min) { msg = `You are ${money(budget.min-total)} below the minimum spend of ${budgetMoney(budget.min)}.`; cls = "warn"; }
+    else { msg = `You are ${money(total-budget.max)} over the maximum spend of ${budgetMoney(budget.max)}. Please remove something.`; cls = "bad"; }
   }
-  else { msg = S.stage === 1 ? `Your total is within budget (${money(budget.min)} to ${money(budget.max)}). You can submit.` : "Your basket is ready to submit."; cls = "ok"; }
+  else { msg = S.stage === 1 ? `Your total is within budget (${budgetMoney(budget.min)} to ${budgetMoney(budget.max)}). You can submit.` : "Your basket is ready to submit."; cls = "ok"; }
   $("status").textContent = msg; $("status").className = "status " + cls;
   $("submitBtn").textContent = S.stage === 0 ? "Submit basket 1 and continue" : "Submit basket 2";
   $("submitBtn").classList.toggle("hidden", S.stage >= 2);
