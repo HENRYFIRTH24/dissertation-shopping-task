@@ -9,33 +9,33 @@
           --accent:#2563eb; --ok:#15803d; --warn:#b45309; --bad:#b91c1c; }
   * { box-sizing: border-box; }
   body { margin:0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-         background:var(--bg); color:var(--ink); }
+          background:var(--bg); color:var(--ink); }
   header { background:var(--card); border-bottom:1px solid var(--line); padding:14px 20px; }
   header h1 { margin:0; font-size:1.2rem; }
   header p { margin:4px 0 0; color:var(--muted); font-size:.9rem; }
   main { display:grid; grid-template-columns: 1fr 340px; gap:20px; max-width:1100px;
-         margin:20px auto; padding:0 16px; }
+          margin:20px auto; padding:0 16px; }
   @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
   .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; }
   .tabs { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
   .tab { border:1px solid var(--line); background:var(--card); padding:7px 12px; border-radius:20px;
-         cursor:pointer; font-size:.9rem; }
+          cursor:pointer; font-size:.9rem; }
   .tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
   .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(190px,1fr)); gap:12px; }
   .product { border:1px solid var(--line); border-radius:10px; padding:12px; display:flex;
-             flex-direction:column; gap:6px; background:#fff; }
+              flex-direction:column; gap:6px; background:#fff; }
   .product .emoji { font-size:2rem; }
   .product .name { font-weight:600; font-size:.95rem; }
   .product .price { color:var(--muted); font-size:.9rem; }
   .qty { display:flex; align-items:center; gap:8px; margin-top:auto; }
   .qty button { width:32px; height:32px; border-radius:50%; border:1px solid var(--line);
-                background:#fff; font-size:1.1rem; cursor:pointer; }
+                 background:#fff; font-size:1.1rem; cursor:pointer; }
   .qty button:hover { background:#eef2ff; }
   .qty span { min-width:20px; text-align:center; font-weight:600; }
   .basket h2 { margin:0 0 10px; font-size:1.05rem; }
   .basket ul { list-style:none; margin:0; padding:0; max-height:280px; overflow:auto; }
   .basket li { display:flex; justify-content:space-between; padding:6px 0;
-               border-bottom:1px solid var(--line); font-size:.9rem; }
+                border-bottom:1px solid var(--line); font-size:.9rem; }
   .total { font-size:1.6rem; font-weight:700; margin:12px 0 4px; }
   .status { font-size:.9rem; padding:8px 10px; border-radius:8px; margin-bottom:10px; }
   .status.ok   { background:#dcfce7; color:var(--ok); }
@@ -43,15 +43,15 @@
   .status.bad  { background:#fee2e2; color:var(--bad); }
   label { display:block; font-size:.85rem; color:var(--muted); margin-bottom:4px; }
   input[type=text] { width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:8px;
-                     font-size:1rem; margin-bottom:12px; }
+                      font-size:1rem; margin-bottom:12px; }
   .btn { width:100%; padding:11px; border:0; border-radius:8px; background:var(--accent);
-         color:#fff; font-size:1rem; cursor:pointer; }
+          color:#fff; font-size:1rem; cursor:pointer; }
   .btn:disabled { background:#b6c2d9; cursor:not-allowed; }
   .btn.secondary { background:#fff; color:var(--accent); border:1px solid var(--accent); margin-top:8px; }
   .hidden { display:none; }
   .notice { font-size:.85rem; color:var(--muted); margin-top:10px; }
   .badge { display:inline-block; font-size:.7rem; padding:2px 6px; border-radius:4px;
-           background:#eef2ff; color:var(--accent); margin-left:6px; }
+            background:#eef2ff; color:var(--accent); margin-left:6px; }
   .step { font-size:.8rem; font-weight:600; color:var(--accent); margin-bottom:8px; }
   .saved { font-size:.8rem; color:var(--muted); margin-top:8px; text-align:center; }
   .saved.err { color:var(--bad); }
@@ -344,7 +344,7 @@ function snapshot(c, status) {
     itemsJson: JSON.stringify(itemsOf(c).map(p => ({id:p.id, qty:p.qty, nutri: scoreOf(p)}))),
     selectedItemsWithNutri: JSON.stringify(itemsOf(c).map(p => ({id:p.id, qty:p.qty, nutri: scoreOf(p)})))
   };
-  PRODUCTS.forEach(p => row["q_" + p.id] = basketOf(c)[p.id] || 0);
+  PRODUCTS.forEach(p => row["q_" + p.name] = basketOf(c)[p.id] || 0);
   return row;
 }
 function indicator(t, err) { $("saveInd").textContent = t; $("saveInd").className = "saved" + (err ? " err" : ""); }
