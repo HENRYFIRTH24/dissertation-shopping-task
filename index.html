@@ -325,12 +325,6 @@ const itemsOf = c => available(c).filter(p => (basketOf(c)[p.id]||0) > 0).map(p 
 const totalOf = c => itemsOf(c).reduce((s,p) => s + Math.round(p.price*100)*p.qty, 0) / 100;
 const countOf = c => itemsOf(c).reduce((s,p) => s + p.qty, 0);
 const meanNutri = c => countOf(c) ? itemsOf(c).reduce((s,p) => s + scoreOf(p)*p.qty, 0) / countOf(c) : "";
-const meanNutriGrade = c => {
-  const m = meanNutri(c);
-  if (m === "") return "";
-  const idx = Math.max(1, Math.min(5, Math.round(m)));
-  return ["", "A", "B", "C", "D", "E"][idx];
-};
 
 const lsKey = pid => "shoptask_v3_" + pid;
 function persist() { if (S.pid) try { localStorage.setItem(lsKey(S.pid), JSON.stringify(S)); } catch(e) {} }
@@ -345,11 +339,10 @@ function snapshot(c, status) {
     basketTotal: totalOf(c).toFixed(2), inBudget: inRangeForStage(totalOf(c), S.stage) ? 1 : 0,
     itemCount: countOf(c), distinctItems: itemsOf(c).length,
     meanNutriPoints: meanNutri(c) === "" ? "" : meanNutri(c).toFixed(3),
-    meanNutriGrade: meanNutriGrade(c),
     secondsOnBasket: Math.round((Date.now() - (S.startedAt[c] || Date.now())) / 1000),
     updatedAt: new Date().toISOString(),
-    itemsJson: JSON.stringify(itemsOf(c).map(p => ({id:p.id, qty:p.qty, nutri: scoreOf(p)}))),
-    selectedItemsWithNutri: JSON.stringify(itemsOf(c).map(p => ({id:p.id, qty:p.qty, nutri: scoreOf(p)})))
+    itemsJson: JSON.stringify(itemsOf(c).map(p => ({id:p.id, name:p.name, qty:p.qty, nutri: scoreOf(p)}))),
+    selectedItemsWithNutri: JSON.stringify(itemsOf(c).map(p => ({id:p.id, name:p.name, qty:p.qty, nutri: scoreOf(p)})))
   };
   PRODUCTS.forEach(p => row["q_" + p.name] = basketOf(c)[p.id] || 0);
   return row;
