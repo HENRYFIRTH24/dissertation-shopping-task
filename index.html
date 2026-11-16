@@ -111,15 +111,13 @@
     <div id="pidBox">
       <label for="pid">Your participant ID (copy this for the JISC survey)</label>
       <input type="text" id="pid" placeholder="e.g. P017" autocomplete="off" style="font-size:1.05rem; font-weight:600; min-height:42px;">
-      <button type="button" class="btn secondary" id="copyPidBtn" style="margin-top:8px; width:100%;">Copy participant ID</button>
     </div>
 
     <button class="btn" id="submitBtn" disabled>Submit basket</button>
 
     <div id="finishBox" class="hidden">
-      <button class="btn secondary" id="downloadBtn">Download my responses (CSV)</button>
-      <div style="font-size:0.9rem; margin:8px 0 10px; color:var(--muted);">Copy your participant ID before continuing to the questionnaire.</div>
-      <a class="btn" id="questionnaireLink" href="#">Continue to the questionnaire</a>
+      <button type="button" class="btn secondary" id="copyPidBtn">Copy participant ID</button>
+      <p class="notice">Your response has been saved, please return to the questionnaire.</p>
     </div>
     <div class="saved" id="saveInd"></div>
   </aside>
@@ -475,9 +473,12 @@ async function submitBasket() {
   renderAll(); window.scrollTo(0, 0);
 }
 function setupFinish() {
-  const base = CONFIG.questionnaireUrl, link = $("questionnaireLink");
-  if (base) link.href = base + (base.includes("?") ? "&" : "?") + encodeURIComponent(CONFIG.questionnaireParam) + "=" + encodeURIComponent(S.pid);
-  else link.classList.add("hidden");
+  const link = $("questionnaireLink");
+  if (link) {
+    const base = CONFIG.questionnaireUrl;
+    if (base) link.href = base + (base.includes("?") ? "&" : "?") + encodeURIComponent(CONFIG.questionnaireParam) + "=" + encodeURIComponent(S.pid);
+    else link.classList.add("hidden");
+  }
 }
 function toCSV() {
   const rows = ORDER.map(c => S.results[c] || snapshot(c, "final"));
@@ -518,7 +519,6 @@ function init() {
     S.pid = v; renderBasket(); queueSave();
   });
   $("submitBtn").onclick = submitBasket;
-  $("downloadBtn").onclick = downloadCSV;
   $("copyPidBtn").onclick = async () => {
     try {
       await navigator.clipboard.writeText($("pid").value || S.pid);
